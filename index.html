@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bizz Sphere | Virtual Stock Exchange Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --card-bg: #131722;
+      --panel-border: #2a2e39;
+      --accent-blue: #2962ff;
+      --accent-green: #00e676;
+      --accent-red: #f23645;
+      --ecn-amber: #ffb74d;
+      --text-main: #d1d4dc;
+      --text-muted: #787b86;
+      --text-bright: #ffffff;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      font-family: var(--font-sans);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-group { display: flex; align-items: center; gap: 12px; }
+    .brand-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-bright); }
+    .brand-subtitle { font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+    .status-badge.live { background: rgba(0, 230, 118, 0.12); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3); }
+    .status-badge.user-active { 
+      background: rgba(41, 98, 255, 0.15); 
+      color: #ffffff; 
+      border: 1px solid rgba(41, 98, 255, 0.4); 
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-badge.login-btn { 
+      background: #2962ff; 
+      color: #ffffff; 
+      cursor: pointer; 
+      border: none;
+      transition: background 0.15s;
+    }
+    .status-badge.login-btn:hover { background: #1e53e5; }
+
+    .btn-logout-inline {
+      background: #dc2626;
+      color: #ffffff;
+      border: none;
+      border-radius: 3px;
+      padding: 2px 7px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .btn-logout-inline:hover { background: #b91c1c; }
+
+    .nav-stats { display: flex; gap: 18px; align-items: center; font-family: var(--font-mono); }
+    .stat-pill { display: flex; flex-direction: column; align-items: flex-end; }
+    .stat-pill .lbl { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; }
+    .stat-pill .val { font-size: 0.95rem; font-weight: 800; color: var(--accent-blue); }
+
+    .tabs-bar {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+    .tab-btn.active { color: var(--text-bright); background: #1e222d; border-color: var(--panel-border); }
+    .tab-btn.highlight { border-color: var(--ecn-amber); color: var(--ecn-amber); }
+
+    .terminal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .card-title { font-size: 0.88rem; font-weight: 800; color: var(--text-bright); text-transform: uppercase; font-family: var(--font-mono); }
+
+    .rank-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .rank-select {
+      background: #0b0e14;
+      border: 1px solid var(--panel-border);
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--panel-border);
+      background: #111418;
+    }
+    td { padding: 10px; border-bottom: 1px solid rgba(42, 46, 57, 0.6); vertical-align: middle; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      font-weight: 800;
+      font-size: 0.75rem;
+    }
+    .rank-1 { background: rgba(255, 183, 77, 0.2); color: #ffb74d; border: 1px solid #ffb74d; }
+    .rank-2 { background: rgba(209, 212, 220, 0.2); color: #ffffff; border: 1px solid #d1d4dc; }
+    .rank-3 { background: rgba(205, 127, 50, 0.2); color: #cd7f32; border: 1px solid #cd7f32; }
+    .rank-other { color: var(--text-muted); }
+
+    .btn-action {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-family: var(--font-mono);
+    }
+    .btn-action:hover { background: #1e53e5; }
+    .btn-print {
+      background: var(--accent-green);
+      color: #0b0e14;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: var(--font-mono);
+    }
+
+    .desk-badges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+    }
+    .desk-badge-card {
+      background: #ffffff;
+      color: #0d1117;
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border: 2px solid #000000;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .desk-school-tag {
+      font-size: 0.64rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #57606a;
+      border-bottom: 1.5px solid #eaeef2;
+      padding-bottom: 5px;
+      width: 100%;
+    }
+    .desk-comp-name {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0969da;
+      margin-top: 8px;
+    }
+    .badge-qr-box {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px auto;
+      border: 2px solid #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 170px;
+      height: 170px;
+    }
+    .badge-qr-box svg { display: block; width: 100%; height: 100%; }
+    .desk-instructions {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      background: #f6f8fa;
+      border: 1px dashed #d0d7de;
+      border-radius: 6px;
+      padding: 8px 12px;
+      width: 100%;
+      color: #24292f;
+      line-height: 1.4;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #131722;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 440px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      font-family: var(--font-mono);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; }
+    .modal-title { font-weight: 800; font-size: 0.9rem; color: white; }
+    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+
+    .data-summary-box {
+      background: #0b0e14;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.78rem;
+    }
+    .data-row { display: flex; justify-content: space-between; }
+    .data-row .k { color: var(--text-muted); }
+    .data-row .v { font-weight: 700; color: white; }
+
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+    .input-group label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+    .input-group input {
+      background: #0b0e14;
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      color: white;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .input-group input:focus { outline: none; border-color: var(--accent-blue); }
+
+    @media print {
+      body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; }
+      header, .tabs-bar, #tab-market, #tab-portfolio, #tab-leaderboard, #tab-ledger, .no-print { display: none !important; }
+      #tab-desk-badges { display: block !important; }
+      .desk-badges-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
+      .desk-badge-card { page-break-inside: avoid !important; border: 2px solid #000000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header class="no-print">
+      <div class="brand-group">
+        <div>
+          <div class="brand-title">BIZZ SPHERE <span>TERMINAL</span></div>
+          <div class="brand-subtitle">Birla Open Minds International School, Pampore</div>
+        </div>
+        <span class="status-badge live">● MARKET OPEN</span>
+        
+        <div id="auth-header-container">
+          <button class="status-badge login-btn" id="btn-login-trigger" onclick="openLoginModal()">
+            👤 LOGIN TO TRADE
+          </button>
+          <div class="status-badge user-active" id="badge-logged-user" style="display: none;">
+            👤 <span id="logged-user-name">INVESTOR</span>
+            <button class="btn-logout-inline" onclick="executeUserLogout()" title="Log out from this wallet">⏻ LOGOUT</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-stats" id="public-market-stats">
+        <div class="stat-pill">
+          <span class="lbl">Listed Teams</span>
+          <span class="val" id="market-team-count">9 TEAMS</span>
+        </div>
+        <div class="stat-pill">
+          <span class="lbl">Total Market Cap</span>
+          <span class="val" style="color: var(--accent-green);" id="market-total-cap">₹0</span>
+        </div>
+        <button class="btn-action" onclick="fetchLiveSheetData()">↻ Sync</button>
+      </div>
+
+      <div class="nav-stats" id="private-investor-stats" style="display: none;">
+        <div class="stat-pill">
+          <span class="lbl">Your Balance</span>
+          <span class="val" id="user-ecn-balance">0 ECN</span>
+        </div>
+        <div class="stat-pill">
+          <span class="lbl">Portfolio Valuation</span>
+          <span class="val" style="color: var(--accent-green);" id="user-portfolio-val">₹0</span>
+        </div>
+        <button class="btn-action" style="background: #dc2626;" onclick="executeUserLogout()">⏻ Logout</button>
+      </div>
+    </header>
+
+    <div class="tabs-bar no-print">
+      <button class="tab-btn active" onclick="switchTab('market')">MARKET OVERVIEW</button>
+      <button class="tab-btn" onclick="switchTab('portfolio')">MY PORTFOLIO & CHARTS</button>
+      <button class="tab-btn" onclick="switchTab('leaderboard')">LEADERBOARD</button>
+      <button class="tab-btn" onclick="switchTab('ledger')">TRANSACTIONS LOG</button>
+      <button class="tab-btn highlight" onclick="switchTab('desk-badges')">🖨️ PRINT DESK QR STANDS</button>
+    </div>
+
+    <!-- TAB 1: Market Overview -->
+    <div class="terminal-card" id="tab-market">
+      <div class="card-header-bar">
+        <div>
+          <span class="card-title">Live Market Instruments & Accurate Pricing</span>
+          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+            Multiplier: <strong style="color: var(--accent-green);">3.0× Exposure</strong> | 1 ECN = ₹500
+          </div>
+        </div>
+
+        <div class="rank-controls">
+          <span>RANK BY:</span>
+          <select class="rank-select" id="market-rank-select" onchange="changeRankingCriteria(this.value)">
+            <option value="INVESTMENT" selected>Total Investments Received (ECN)</option>
+            <option value="CAPITAL">Working Capital (₹)</option>
+            <option value="PRICE">Share Price (₹)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px;">Rank</th>
+              <th>ID</th>
+              <th>Venture / Company Name</th>
+              <th>School Name</th>
+              <th>Working Capital</th>
+              <th>Opening Price</th>
+              <th>Live Share Price</th>
+              <th>Total Invested</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="market-grid-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: Portfolio -->
+    <div class="terminal-card" id="tab-portfolio" style="display: none;">
+      <div class="card-header-bar">
+        <span class="card-title">Investor Asset Allocations</span>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>ECN Invested</th>
+              <th>Units Owned</th>
+              <th>Current Market Price</th>
+              <th>Holding Value</th>
+            </tr>
+          </thead>
+          <tbody id="portfolio-grid-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: Leaderboard -->
+    <div class="terminal-card" id="tab-leaderboard" style="display: none;">
+      <div class="card-header-bar">
+        <span class="card-title">Official Live Capitalization & Investment Leaderboard</span>
+        <div class="rank-controls">
+          <span>SORTED STRICTLY BY:</span>
+          <strong style="color: #38bdf8;">TOTAL INVESTMENTS RECEIVED (ECN)</strong>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 60px;">Rank</th>
+              <th>Venture / Company Name</th>
+              <th>School / Team ID</th>
+              <th>Working Capital</th>
+              <th>Total Investment Received</th>
+              <th>Live Share Price</th>
+              <th>Percentage Gain</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-grid-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: Ledger -->
+    <div class="terminal-card" id="tab-ledger" style="display: none;">
+      <div class="card-header-bar">
+        <div>
+          <span class="card-title">Immutable Transaction Ledger</span>
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+            Synchronized live with the master Google Sheet.
+          </div>
+        </div>
+        <button class="btn-action" style="background: var(--accent-green); color: #0b0e14;" onclick="downloadLedgerCSV()">
+          📥 Download CSV
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Time</th>
+              <th>Investor ID</th>
+              <th>Company</th>
+              <th>ECN Deducted</th>
+              <th>Multiplier</th>
+              <th>Units Conferred</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-grid-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: Tabletop QR Badges -->
+    <div class="terminal-card" id="tab-desk-badges" style="display: none;">
+      <div class="card-header-bar no-print">
+        <div>
+          <span class="card-title">Team Tabletop QR Stands (Ready to Print)</span>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+            Print and place on each team desk for instant mobile scanning.
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="custom-base-url" placeholder="Production URL" style="background:#0b0e14; border:1px solid var(--panel-border); color:white; padding:6px 10px; font-family:var(--font-mono); font-size:0.75rem; border-radius:4px; width:280px;" oninput="updateQrBaseUrl(this.value)" />
+          <button class="btn-print" onclick="window.print()">🖨️ Print Team Desk Badges</button>
+        </div>
+      </div>
+      <div class="desk-badges-grid" id="desk-badges-container"></div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">AUTHENTICATE INVESTOR</span>
+        <button class="close-btn" onclick="closeLoginModal()">✕</button>
+      </div>
+
+      <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+        Enter your official <strong>Investor ID</strong> and <strong>PIN</strong> from the Google Sheet. Unregistered IDs will be rejected.
+      </div>
+
+      <form onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="input-group">
+          <label>Investor / User ID</label>
+          <input type="text" id="login-user-id" placeholder="e.g. INV-1005 or BRM-PS" required autocomplete="off" />
+        </div>
+
+        <div class="input-group">
+          <label>Security PIN</label>
+          <input type="password" id="login-password" placeholder="Enter PIN" required autocomplete="off" />
+        </div>
+
+        <div id="login-error-msg" style="color: var(--accent-red); font-size: 0.75rem; font-weight: 700; display: none;"></div>
+
+        <button type="submit" class="btn-action" style="padding: 10px; font-size: 0.85rem; margin-top: 6px;">
+          AUTHENTICATE WALLET
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Investment Modal -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">INVESTMENT ORDER SLIP</span>
+        <button class="close-btn" onclick="closeOrderModal()">✕</button>
+      </div>
+
+      <div class="data-summary-box">
+        <div class="data-row"><span class="k">Target Company:</span><span class="v" id="order-comp-name">-</span></div>
+        <div class="data-row"><span class="k">Current Price:</span><span class="v" id="order-comp-price" style="color: #38bdf8;">-</span></div>
+        <div class="data-row"><span class="k">Your Identity:</span><span class="v" id="order-user-id" style="color: var(--accent-blue);">-</span></div>
+        <div class="data-row"><span class="k">Assigned School:</span><span class="v" id="order-user-team" style="color: var(--ecn-amber);">-</span></div>
+        <div class="data-row"><span class="k">Available Balance:</span><span class="v" id="order-user-ecn" style="color: var(--accent-green);">-</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Enter ECN to Invest</label>
+        <input type="number" id="order-ecn-input" placeholder="e.g. 500" oninput="calculateOrderPreview()" />
+      </div>
+
+      <div class="data-summary-box" style="background: rgba(41, 98, 255, 0.05); border-color: rgba(41, 98, 255, 0.2);">
+        <div class="data-row"><span class="k">Deduction:</span><span class="v" id="preview-ecn-deduct" style="color: var(--accent-red);">0 ECN</span></div>
+        <div class="data-row"><span class="k">Units Conferred (3.0x):</span><span class="v" id="preview-units" style="color: var(--accent-green);">0 UNITS</span></div>
+        <div class="data-row"><span class="k">New Share Price:</span><span class="v" id="preview-new-price" style="color: #38bdf8; font-weight: 800;">-</span></div>
+        <div class="data-row"><span class="k">Remaining Balance:</span><span class="v" id="preview-balance">-</span></div>
+      </div>
+
+      <button class="btn-action" style="padding: 12px; font-size: 0.9rem;" onclick="confirmOrderExecution()">
+        CONFIRM & EXECUTE TRADE
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyYQoXxlUMuOKZRLsdECwHEz86o5i_Eyz1GglTue466GhLqRr_FfyYfdO1amYG9GAzKKA/exec";
+    const SPREADSHEET_ID = "1-jU11c-llG75k1zIlGLBtFOiOoc13HejWV4Gj1csRdY";
+    const MULTIPLIER = 3.0;
+
+    var StandaloneQR = (function() {
+      var EXP_TABLE = new Array(256), LOG_TABLE = new Array(256);
+      for (var i = 0, x = 1; i < 256; i++) { EXP_TABLE[i] = x; LOG_TABLE[x] = i; x = (x << 1) ^ (x >= 128 ? 0x11d : 0); }
+      function gmult(a, b) { return (a === 0 || b === 0) ? 0 : EXP_TABLE[(LOG_TABLE[a] + LOG_TABLE[b]) % 255]; }
+      function rsGenPoly(n) {
+        var poly = [1];
+        for (var i = 0; i < n; i++) {
+          var next = [1, EXP_TABLE[i]], res = new Array(poly.length + 1).fill(0);
+          for (var j = 0; j < poly.length; j++) { res[j] ^= gmult(poly[j], next[0]); res[j + 1] ^= gmult(poly[j], next[1]); }
+          poly = res;
+        }
+        return poly;
+      }
+      function rsEncode(data, ecLen) {
+        var gen = rsGenPoly(ecLen), msg = data.concat(new Array(ecLen).fill(0));
+        for (var i = 0; i < data.length; i++) {
+          var coef = msg[i]; if (coef !== 0) { for (var j = 0; j < gen.length; j++) msg[i + j] ^= gmult(gen[j], coef); }
+        }
+        return msg.slice(data.length);
+      }
+      function generateMatrix(text) {
+        var version = 3, size = 29, dataBytesCount = 44, ecBytesCount = 26;
+        var bits = [0, 1, 0, 0], len = text.length;
+        for (var i = 7; i >= 0; i--) bits.push((len >> i) & 1);
+        for (var i = 0; i < len; i++) {
+          var c = text.charCodeAt(i); for (var b = 7; b >= 0; b--) bits.push((c >> b) & 1);
+        }
+        while (bits.length < dataBytesCount * 8 && bits.length < dataBytesCount * 8 - 4) bits.push(0);
+        while (bits.length % 8 !== 0) bits.push(0);
+        var padBytes = [0xec, 0x11], padIdx = 0;
+        while (bits.length < dataBytesCount * 8) {
+          var p = padBytes[padIdx % 2]; for (var b = 7; b >= 0; b--) bits.push((p >> b) & 1); padIdx++;
+        }
+        var dataArr = [];
+        for (var i = 0; i < bits.length; i += 8) {
+          var byteVal = 0; for (var b = 0; b < 8; b++) byteVal = (byteVal << 1) | bits[i + b]; dataArr.push(byteVal);
+        }
+        var ecArr = rsEncode(dataArr, ecBytesCount), finalData = dataArr.concat(ecArr);
+        var matrix = [], reserved = [];
+        for (var r = 0; r < size; r++) { matrix.push(new Array(size).fill(0)); reserved.push(new Array(size).fill(false)); }
+        function placeFinder(startX, startY) {
+          for (var y = -1; y <= 7; y++) {
+            for (var x = -1; x <= 7; x++) {
+              var px = startX + x, py = startY + y;
+              if (px >= 0 && px < size && py >= 0 && py < size) {
+                var isBlack = (x >= 0 && x <= 6 && (y === 0 || y === 6)) || (y >= 0 && y <= 6 && (x === 0 || x === 6)) || (x >= 2 && x <= 4 && y >= 2 && y <= 4);
+                matrix[py][px] = isBlack ? 1 : 0; reserved[py][px] = true;
+              }
+            }
+          }
+        }
+        placeFinder(0, 0); placeFinder(size - 7, 0); placeFinder(0, size - 7);
+        var ax = 22, ay = 22;
+        for (var y = -2; y <= 2; y++) {
+          for (var x = -2; x <= 2; x++) { matrix[ay + y][ax + x] = (Math.max(Math.abs(x), Math.abs(y)) !== 1) ? 1 : 0; reserved[ay + y][ax + x] = true; }
+        }
+        for (var i = 8; i < size - 8; i++) { matrix[6][i] = (i % 2 === 0) ? 1 : 0; reserved[6][i] = true; matrix[i][6] = (i % 2 === 0) ? 1 : 0; reserved[i][6] = true; }
+        for (var i = 0; i < 9; i++) { reserved[8][i] = true; reserved[i][8] = true; reserved[8][size - 1 - i] = true; reserved[size - 1 - i][8] = true; }
+        matrix[size - 8][8] = 1; reserved[size - 8][8] = true;
+        var bitIdx = 0, totalBits = finalData.length * 8, dir = -1;
+        for (var col = size - 1; col > 0; col -= 2) {
+          if (col === 6) col--;
+          var row = (dir === -1) ? (size - 1) : 0;
+          while (row >= 0 && row < size) {
+            for (var c = 0; c < 2; c++) {
+              var currCol = col - c;
+              if (!reserved[row][currCol]) {
+                var bitVal = 0;
+                if (bitIdx < totalBits) {
+                  var bByte = finalData[Math.floor(bitIdx / 8)];
+                  bitVal = (bByte >> (7 - (bitIdx % 8))) & 1; bitIdx++;
+                }
+                if ((row + currCol) % 2 === 0) bitVal ^= 1;
+                matrix[row][currCol] = bitVal;
+              }
+            }
+            row += dir;
+          }
+          dir = -dir;
+        }
+        var fmt = [1,0,1,0,1,0,0,0,0,0,1,0,0,1,0];
+        for (var i = 0; i < 6; i++) matrix[8][i] = fmt[i];
+        matrix[8][7] = fmt[6]; matrix[8][8] = fmt[7]; matrix[7][8] = fmt[8];
+        for (var i = 0; i < 6; i++) matrix[5 - i][8] = fmt[9 + i];
+        for (var i = 0; i < 7; i++) matrix[size - 1 - i][8] = fmt[i];
+        for (var i = 0; i < 8; i++) matrix[8][size - 8 + i] = fmt[7 + i];
+        return matrix;
+      }
+      return {
+        getSvg: function(text) {
+          var mat = generateMatrix(text), size = mat.length;
+          var svg = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" shape-rendering="crispEdges">'];
+          svg.push('<rect width="100%" height="100%" fill="#ffffff"/><path fill="#000000" d="');
+          for (var r = 0; r < size; r++) {
+            for (var c = 0; c < size; c++) { if (mat[r][c] === 1) svg.push('M' + c + ',' + r + 'h1v1h-1z '); }
+          }
+          svg.push('"/></svg>');
+          return svg.join('');
+        }
+      };
+    })();
+
+    function computeDynamicSharePrice(startingPrice, workingCapital, totalInvestedECN) {
+      const p0 = Number(startingPrice) || 100;
+      const w = Number(workingCapital) || 50000;
+      const inv = Number(totalInvestedECN) || 0;
+      const liquidityDepth = Math.max(w * 0.15, 5000);
+      const units = inv * MULTIPLIER;
+      const price = p0 * (1 + (units / liquidityDepth));
+      return Math.round(price * 100) / 100;
+    }
+
+    function cleanString(s) {
+      return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    let validInvestorsFromSheet = {};
+    let currentUser = null;
+    let portfolio = {};
+    let transactions = [];
+    let companies = [];
+    let selectedCompany = null;
+    let baseProductionUrl = "https://bizz-sphere.vercel.app";
+    let activeRankingCriterion = "INVESTMENT";
+
+    // Remote investments verified from Google Sheets Live Bidding Log
+    let verifiedLiveInvestments = {};
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.origin && window.location.origin !== "null" && !window.location.origin.startsWith("file")) {
+        baseProductionUrl = window.location.origin + window.location.pathname;
+      }
+      const urlInput = document.getElementById('custom-base-url');
+      if (urlInput) urlInput.value = baseProductionUrl;
+
+      const savedTx = localStorage.getItem('bsx_ledger_all');
+      if (savedTx) {
+        try { transactions = JSON.parse(savedTx); } catch(e) { transactions = []; }
+      }
+
+      const savedUser = localStorage.getItem('bsx_session_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          const savedPort = localStorage.getItem('bsx_port_' + currentUser.userId);
+          if (savedPort) portfolio = JSON.parse(savedPort);
+        } catch(e) { currentUser = null; }
+      }
+
+      updateUserDisplay();
+      fetchLiveSheetData();
+      setInterval(fetchLiveSheetData, 4500);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetComp = urlParams.get('invest');
+      if (targetComp) {
+        setTimeout(function() {
+          if (!currentUser) openLoginModal();
+          else openOrderModal(targetComp);
+        }, 800);
+      }
+    });
+
+    function saveState() {
+      if (currentUser) {
+        localStorage.setItem('bsx_session_user', JSON.stringify(currentUser));
+        localStorage.setItem('bsx_port_' + currentUser.userId, JSON.stringify(portfolio));
+      }
+      localStorage.setItem('bsx_ledger_all', JSON.stringify(transactions));
+      updateUserDisplay();
+    }
+
+    function updateUserDisplay() {
+      const publicBar = document.getElementById('public-market-stats');
+      const privateBar = document.getElementById('private-investor-stats');
+      const btnLogin = document.getElementById('btn-login-trigger');
+      const badgeUser = document.getElementById('badge-logged-user');
+
+      if (!currentUser) {
+        btnLogin.style.display = "inline-flex";
+        badgeUser.style.display = "none";
+        publicBar.style.display = "flex";
+        privateBar.style.display = "none";
+
+        let totalCap = 0;
+        companies.forEach(function(c) { totalCap += Number(c.workingCapital) || 0; });
+        document.getElementById('market-team-count').innerText = (companies.length || 9) + " TEAMS";
+        document.getElementById('market-total-cap').innerText = "₹" + totalCap.toLocaleString('en-IN');
+      } else {
+        btnLogin.style.display = "none";
+        badgeUser.style.display = "inline-flex";
+        document.getElementById('logged-user-name').innerText = currentUser.name + " (" + (currentUser.assignedTeamId || 'INVESTOR') + ")";
+        publicBar.style.display = "none";
+        privateBar.style.display = "flex";
+
+        document.getElementById('user-ecn-balance').innerText = Number(currentUser.ecnBalance).toLocaleString() + " ECN";
+
+        let totalPortVal = 0;
+        Object.keys(portfolio).forEach(function(cId) {
+          const item = portfolio[cId];
+          const comp = companies.find(function(c) { return c.id === cId; });
+          const price = comp ? Number(comp.currentPrice) : 100;
+          totalPortVal += (Number(item.units) || 0) * price;
+        });
+        document.getElementById('user-portfolio-val').innerText = "₹" + totalPortVal.toLocaleString('en-IN');
+      }
+    }
+
+    function executeUserLogout() {
+      if (confirm("Log out of current investor wallet?")) {
+        currentUser = null;
+        portfolio = {};
+        localStorage.removeItem('bsx_session_user');
+        closeOrderModal();
+        closeLoginModal();
+        updateUserDisplay();
+        renderPortfolioGrid();
+      }
+    }
+
+    /* ==========================================================================
+       SMART SHEET DATA PARSER (DEALS WITH OMITTED TEAM LEADER COLUMN AUTOMATICALLY)
+       ========================================================================== */
+    window.handleSheetSync = function(response) {
+      if (!response || !response.table || !response.table.rows) return;
+      const rows = response.table.rows;
+      const parsed = [];
+
+      rows.forEach(function(r) {
+        if (!r.c) return;
+        function getCell(idx) {
+          if (!r.c[idx]) return "";
+          return r.c[idx].v !== undefined && r.c[idx].v !== null ? r.c[idx].v : (r.c[idx].f || "");
+        }
+
+        const rawId = String(getCell(0)).trim();
+        const rawTeamName = String(getCell(1)).trim();
+        const rawCompName = String(getCell(2) || rawTeamName).trim();
+
+        if (!rawId || !rawTeamName || rawId === "Team ID") return;
+
+        // Auto-detect column shift:
+        // In the user's sheet: Col 3 is 50000 (Initial Capital), Col 8 is Working Capital (e.g. 85500), Col 9 is Starting Price (e.g. 171)
+        let workingCapital = 85000;
+        let startingPrice = 120;
+
+        if (Number(getCell(3)) === 50000) {
+          // Shifted by -1 (Team leader column was skipped in data rows)
+          workingCapital = Number(getCell(8)) || 85000;
+          startingPrice = Number(getCell(9)) || 150;
+        } else {
+          // Normal standard layout
+          workingCapital = Number(getCell(9)) || 85000;
+          startingPrice = Number(getCell(10)) || 150;
+        }
+
+        const kId = cleanString(rawId);
+        const kTeam = cleanString(rawTeamName);
+        const kComp = cleanString(rawCompName);
+
+        // Fetch investment from verified live bidding log
+        let totalInvested = Number(verifiedLiveInvestments[kComp]) || Number(verifiedLiveInvestments[kTeam]) || Number(verifiedLiveInvestments[kId]) || 0;
+
+        // Cross-check local transaction buffer for optimistic local update
+        let localSum = 0;
+        transactions.forEach(function(t) {
+          const compClean = cleanString(t.compName);
+          if (compClean === kId || compClean === kTeam || compClean === kComp) {
+            localSum += Number(t.ecnDeducted) || 0;
+          }
+        });
+
+        totalInvested = Math.max(totalInvested, localSum);
+        const currentPrice = computeDynamicSharePrice(startingPrice, workingCapital, totalInvested);
+
+        parsed.push({
+          id: rawId,
+          teamName: rawTeamName,
+          compName: rawCompName,
+          workingCapital: workingCapital,
+          startingPrice: startingPrice,
+          currentPrice: currentPrice,
+          totalInvestmentECN: totalInvested,
+          totalUnitsIssued: totalInvested * MULTIPLIER
+        });
+      });
+
+      if (parsed.length > 0) {
+        companies = parsed;
+        renderMarketGrid();
+        renderDeskBadges();
+        renderLeaderboard();
+        renderPortfolioGrid();
+        updateUserDisplay();
+      }
+    };
+
+    window.handleInvestorsSync = function(response) {
+      if (!response || !response.table || !response.table.rows) return;
+      const rows = response.table.rows;
+      validInvestorsFromSheet = {};
+
+      rows.forEach(function(r) {
+        if (!r.c) return;
+        function getCell(idx) {
+          if (!r.c[idx]) return "";
+          return r.c[idx].v !== undefined && r.c[idx].v !== null ? r.c[idx].v : (r.c[idx].f || "");
+        }
+
+        const uId = String(getCell(0)).trim().toUpperCase();
+        const name = String(getCell(1) || uId).trim();
+        const pass = String(getCell(2)).trim();
+        const startingECN = Number(getCell(3)) || 10000;
+        const role = String(getCell(4) || 'INVESTOR').trim().toUpperCase();
+        const assignedTeamId = String(getCell(5)).trim().toUpperCase();
+
+        if (uId && uId !== "INVESTOR ID") {
+          validInvestorsFromSheet[uId] = {
+            uId: uId,
+            name: name,
+            pass: pass,
+            startingECN: startingECN,
+            role: role,
+            assignedTeamId: assignedTeamId
+          };
+        }
+      });
+    };
+
+    // Reads Live Bidding Log and De-duplicates by Log ID
+    window.handleLogSync = function(response) {
+      if (!response || !response.table || !response.table.rows) return;
+      const rows = response.table.rows;
+      const uniqueTrades = {};
+
+      rows.forEach(function(r) {
+        if (!r.c) return;
+        function getCell(idx) {
+          if (!r.c[idx]) return "";
+          return r.c[idx].v !== undefined && r.c[idx].v !== null ? r.c[idx].v : (r.c[idx].f || "");
+        }
+
+        const logId = String(getCell(0)).trim();
+        const comp = String(getCell(3)).trim();
+        const ecn = Number(getCell(4)) || 0;
+
+        if (logId && comp && ecn > 0) {
+          // De-duplicate multiple identical log submissions
+          uniqueTrades[logId] = { comp: comp, ecn: ecn };
+        }
+      });
+
+      const sums = {};
+      Object.keys(uniqueTrades).forEach(function(k) {
+        const item = uniqueTrades[k];
+        const key = cleanString(item.comp);
+        sums[key] = (Number(sums[key]) || 0) + item.ecn;
+      });
+
+      verifiedLiveInvestments = sums;
+    };
+
+    function fetchLiveSheetData() {
+      const s3 = document.createElement('script');
+      s3.src = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?sheet=Live%20Bidding%20Log&tqx=responseHandler:handleLogSync&_t=' + Date.now();
+      document.head.appendChild(s3);
+
+      const s1 = document.createElement('script');
+      s1.src = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?sheet=Teams&tqx=responseHandler:handleSheetSync&_t=' + Date.now();
+      document.head.appendChild(s1);
+
+      const s2 = document.createElement('script');
+      s2.src = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?sheet=Investors&tqx=responseHandler:handleInvestorsSync&_t=' + Date.now();
+      document.head.appendChild(s2);
+    }
+
+    /* ==========================================================================
+       STRICT NUMERICAL SORTING FOR LEADERBOARD
+       ========================================================================== */
+    function getSortedCompanies() {
+      const copy = [...companies];
+      copy.sort(function(a, b) {
+        const invA = Number(a.totalInvestmentECN) || 0;
+        const invB = Number(b.totalInvestmentECN) || 0;
+        const capA = Number(a.workingCapital) || 0;
+        const capB = Number(b.workingCapital) || 0;
+        const prcA = Number(a.currentPrice) || 0;
+        const prcB = Number(b.currentPrice) || 0;
+
+        if (activeRankingCriterion === "CAPITAL") {
+          if (capB !== capA) return capB - capA;
+          return invB - invA;
+        } else if (activeRankingCriterion === "PRICE") {
+          if (prcB !== prcA) return prcB - prcA;
+          return invB - invA;
+        } else {
+          // Default: Rank purely by Total Investments Received (ECN)
+          if (invB !== invA) return invB - invA;
+          if (capB !== capA) return capB - capA;
+          return a.compName.localeCompare(b.compName);
+        }
+      });
+      return copy;
+    }
+
+    function renderMarketGrid() {
+      const tb = document.getElementById('market-grid-tbody');
+      const sorted = getSortedCompanies();
+
+      tb.innerHTML = sorted.map(function(c, i) {
+        const rank = i + 1;
+        const badge = rank === 1 ? "rank-badge rank-1" : rank === 2 ? "rank-badge rank-2" : rank === 3 ? "rank-badge rank-3" : "rank-badge rank-other";
+        return '<tr>' +
+          '<td><span class="' + badge + '">#' + rank + '</span></td>' +
+          '<td style="color: var(--accent-blue); font-weight: 700;">' + c.id + '</td>' +
+          '<td><strong>' + c.compName + '</strong></td>' +
+          '<td style="color: var(--text-muted);">' + c.teamName + '</td>' +
+          '<td style="color: var(--accent-green); font-weight: 700;">₹' + Number(c.workingCapital).toLocaleString('en-IN') + '</td>' +
+          '<td style="color: var(--text-muted);">₹' + Number(c.startingPrice).toFixed(2) + '</td>' +
+          '<td style="font-weight: 800; color: #38bdf8; font-size: 0.95rem;">₹' + Number(c.currentPrice).toFixed(2) + '</td>' +
+          '<td style="font-weight: 800; color: #00e676;">' + Number(c.totalInvestmentECN).toLocaleString() + ' ECN</td>' +
+          '<td><button class="btn-action" onclick="openOrderModal(\'' + c.id + '\')">INVEST</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function renderLeaderboard() {
+      const tb = document.getElementById('leaderboard-grid-tbody');
+      const sorted = [...companies];
+      sorted.sort(function(a, b) {
+        const invA = Number(a.totalInvestmentECN) || 0;
+        const invB = Number(b.totalInvestmentECN) || 0;
+        if (invB !== invA) return invB - invA;
+        return (Number(b.workingCapital) || 0) - (Number(a.workingCapital) || 0);
+      });
+
+      tb.innerHTML = sorted.map(function(c, i) {
+        const rank = i + 1;
+        const badge = rank === 1 ? "rank-badge rank-1" : rank === 2 ? "rank-badge rank-2" : rank === 3 ? "rank-badge rank-3" : "rank-badge rank-other";
+        const gainPct = (((Number(c.currentPrice) - Number(c.startingPrice)) / Number(c.startingPrice)) * 100).toFixed(1);
+        const gainColor = Number(gainPct) > 0 ? "var(--accent-green)" : "var(--text-muted)";
+        return '<tr>' +
+          '<td><span class="' + badge + '">#' + rank + '</span></td>' +
+          '<td><strong>' + c.compName + '</strong></td>' +
+          '<td style="color: var(--accent-blue); font-weight: 700;">' + c.id + '</td>' +
+          '<td style="color: var(--accent-green); font-weight: 700;">₹' + Number(c.workingCapital).toLocaleString('en-IN') + '</td>' +
+          '<td style="font-weight: 800; color: #00e676;">' + Number(c.totalInvestmentECN).toLocaleString() + ' ECN</td>' +
+          '<td style="font-weight: 800; color: #38bdf8;">₹' + Number(c.currentPrice).toFixed(2) + '</td>' +
+          '<td style="font-weight: 700; color: ' + gainColor + ';">+' + gainPct + '%</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function renderDeskBadges() {
+      const container = document.getElementById('desk-badges-container');
+      if (!container || companies.length === 0) return;
+      container.innerHTML = "";
+      companies.forEach(function(c) {
+        const badge = document.createElement('div');
+        badge.className = 'desk-badge-card';
+        const targetUrl = baseProductionUrl.replace(/\/+$/, '') + '?invest=' + encodeURIComponent(c.id);
+        badge.innerHTML = '<div class="desk-school-tag">Birla Open Minds International School, Pampore</div>' +
+          '<div class="desk-comp-name">' + c.compName + '</div>' +
+          '<div style="font-size: 0.75rem; font-weight: 600; color: #57606a;">' + c.teamName + ' &nbsp;|&nbsp; ' + c.id + '</div>' +
+          '<div class="badge-qr-box">' + StandaloneQR.getSvg(targetUrl) + '</div>' +
+          '<div class="desk-instructions"><strong>SCAN TO INVEST ECN</strong><br>Opening: ₹' + Number(c.startingPrice).toFixed(2) + ' | Live: ₹' + Number(c.currentPrice).toFixed(2) + '<br>3.0× Multiplier Active</div>';
+        container.appendChild(badge);
+      });
+    }
+
+    function renderPortfolioGrid() {
+      const tb = document.getElementById('portfolio-grid-tbody');
+      if (!currentUser) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Login to view your portfolio.</td></tr>';
+        return;
+      }
+      const keys = Object.keys(portfolio);
+      if (keys.length === 0) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No shares held.</td></tr>';
+        return;
+      }
+      tb.innerHTML = keys.map(function(cId) {
+        const item = portfolio[cId];
+        const comp = companies.find(function(c) { return c.id === cId; });
+        const price = comp ? Number(comp.currentPrice) : 100;
+        return '<tr>' +
+          '<td><strong>' + item.name + '</strong> (' + cId + ')</td>' +
+          '<td>' + Number(item.ecnInvested).toLocaleString() + ' ECN</td>' +
+          '<td style="font-weight: 700;">' + Number(item.units).toLocaleString() + ' UNITS</td>' +
+          '<td>₹' + price.toFixed(2) + '</td>' +
+          '<td style="font-weight: 700; color: var(--accent-green);">₹' + (Number(item.units) * price).toLocaleString('en-IN') + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function renderLedger() {
+      const tb = document.getElementById('ledger-grid-tbody');
+      if (transactions.length === 0) {
+        tb.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">No trades executed yet.</td></tr>';
+        return;
+      }
+      tb.innerHTML = transactions.map(function(tx) {
+        return '<tr>' +
+          '<td style="color: var(--accent-blue); font-weight: 700;">' + tx.id + '</td>' +
+          '<td style="color: var(--text-muted);">' + tx.time + '</td>' +
+          '<td>' + tx.investorId + '</td>' +
+          '<td><strong>' + tx.compName + '</strong></td>' +
+          '<td style="color: var(--accent-red);">-' + Number(tx.ecnDeducted).toLocaleString() + ' ECN</td>' +
+          '<td style="color: var(--accent-green);">' + tx.multiplier + '×</td>' +
+          '<td style="font-weight: 700;">' + Number(tx.units).toLocaleString() + '</td>' +
+          '<td><span style="color: #00e676; font-weight: 700;">CONFIRMED</span></td>' +
+        '</tr>';
+      }).reverse().join('');
+    }
+
+    function downloadLedgerCSV() {
+      if (transactions.length === 0) { alert("No trades to export."); return; }
+      let csv = "Log ID,Timestamp,Investor ID,Company,ECN Deducted,Multiplier,Units,Status\n";
+      transactions.forEach(function(t) {
+        csv += '"' + t.id + '","' + t.time + '","' + t.investorId + '","' + t.compName + '",' + t.ecnDeducted + ',"3.0x",' + t.units + ',"CONFIRMED"\n';
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "BizzSphere_Trades_" + Date.now() + ".csv";
+      a.click();
+    }
+
+    function openLoginModal() {
+      document.getElementById('login-error-msg').style.display = 'none';
+      document.getElementById('login-modal').style.display = 'flex';
+    }
+    function closeLoginModal() { document.getElementById('login-modal').style.display = 'none'; }
+
+    /* ==========================================================================
+       STRICT SECURITY CHECK: BLOCKS RANDOM / UNREGISTERED USER IDS
+       ========================================================================== */
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const uId = document.getElementById('login-user-id').value.trim().toUpperCase();
+      const pass = document.getElementById('login-password').value.trim();
+      const errorEl = document.getElementById('login-error-msg');
+
+      // STRICT CHECK 1: Must be in valid investors list from Google Sheet
+      const found = validInvestorsFromSheet[uId];
+      if (!found) {
+        errorEl.innerText = "❌ ACCESS DENIED: Investor ID '" + uId + "' is not registered!";
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      // STRICT CHECK 2: PIN Verification
+      if (found.pass && String(found.pass) !== pass) {
+        errorEl.innerText = "❌ INCORRECT PIN: Verification failed for " + uId + "!";
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      errorEl.style.display = 'none';
+
+      let bal = Number(found.startingECN) || 10000;
+      const savedBal = localStorage.getItem('bsx_balance_' + uId);
+      if (savedBal !== null) bal = parseFloat(savedBal);
+
+      currentUser = {
+        userId: uId,
+        name: found.name,
+        ecnBalance: bal,
+        role: found.role,
+        assignedTeamId: found.assignedTeamId
+      };
+
+      const savedPort = localStorage.getItem('bsx_port_' + uId);
+      portfolio = savedPort ? JSON.parse(savedPort) : {};
+
+      saveState();
+      closeLoginModal();
+      alert("✅ Wallet Unlocked: Welcome " + currentUser.name + " (" + bal.toLocaleString() + " ECN available)");
+    }
+
+    function isForbiddenTrade(targetComp) {
+      if (!currentUser || !currentUser.assignedTeamId) return false;
+      const s = cleanString(currentUser.assignedTeamId);
+      if (!s) return false;
+
+      const tid = cleanString(targetComp.id);
+      const tname = cleanString(targetComp.teamName);
+      const tcomp = cleanString(targetComp.compName);
+
+      return (s === tid || s === tname || s === tcomp || tname.includes(s) || tid.includes(s) || s.includes(tid));
+    }
+
+    function openOrderModal(cId) {
+      if (!currentUser) { openLoginModal(); return; }
+      selectedCompany = companies.find(function(c) { return c.id === cId; });
+      if (!selectedCompany) return;
+
+      if (isForbiddenTrade(selectedCompany)) {
+        alert("🚫 CONFLICT OF INTEREST DETECTED:\nYou belong to " + currentUser.assignedTeamId + ".\nStudents are barred from investing in their own school/venture!");
+        return;
+      }
+
+      document.getElementById('order-comp-name').innerText = selectedCompany.compName;
+      document.getElementById('order-comp-price').innerText = "₹" + Number(selectedCompany.currentPrice).toFixed(2);
+      document.getElementById('order-user-id').innerText = currentUser.userId;
+      document.getElementById('order-user-team').innerText = currentUser.assignedTeamId || "General Pool";
+      document.getElementById('order-user-ecn').innerText = Number(currentUser.ecnBalance).toLocaleString() + " ECN";
+      document.getElementById('order-ecn-input').value = "";
+      calculateOrderPreview();
+      document.getElementById('order-modal').style.display = "flex";
+    }
+
+    function closeOrderModal() { document.getElementById('order-modal').style.display = "none"; }
+
+    function calculateOrderPreview() {
+      if (!currentUser || !selectedCompany) return;
+      const val = parseFloat(document.getElementById('order-ecn-input').value) || 0;
+      const units = Math.floor(val * MULTIPLIER);
+      const hypTotal = Number(selectedCompany.totalInvestmentECN) + val;
+      const projPrice = computeDynamicSharePrice(selectedCompany.startingPrice, selectedCompany.workingCapital, hypTotal);
+
+      document.getElementById('preview-ecn-deduct').innerText = "-" + val.toLocaleString() + " ECN";
+      document.getElementById('preview-units').innerText = units.toLocaleString() + " UNITS";
+      document.getElementById('preview-new-price').innerText = "₹" + projPrice.toFixed(2);
+      document.getElementById('preview-balance').innerText = (currentUser.ecnBalance - val).toLocaleString() + " ECN";
+    }
+
+    function confirmOrderExecution() {
+      if (!currentUser) return;
+      if (isForbiddenTrade(selectedCompany)) {
+        alert("🚫 TRADE REJECTED: Self-investment forbidden.");
+        closeOrderModal();
+        return;
+      }
+
+      const amount = parseFloat(document.getElementById('order-ecn-input').value) || 0;
+      if (amount <= 0) { alert("Enter an investment amount greater than 0."); return; }
+      if (amount > currentUser.ecnBalance) { alert("Insufficient ECN available."); return; }
+
+      const units = Math.floor(amount * MULTIPLIER);
+      currentUser.ecnBalance -= amount;
+      localStorage.setItem('bsx_balance_' + currentUser.userId, currentUser.ecnBalance);
+
+      if (!portfolio[selectedCompany.id]) {
+        portfolio[selectedCompany.id] = { units: 0, ecnInvested: 0, name: selectedCompany.compName };
+      }
+      portfolio[selectedCompany.id].units += units;
+      portfolio[selectedCompany.id].ecnInvested += amount;
+
+      // Optimistic update
+      const kComp = cleanString(selectedCompany.compName);
+      verifiedLiveInvestments[kComp] = (Number(verifiedLiveInvestments[kComp]) || 0) + amount;
+      selectedCompany.totalInvestmentECN = verifiedLiveInvestments[kComp];
+      selectedCompany.totalUnitsIssued = selectedCompany.totalInvestmentECN * MULTIPLIER;
+      selectedCompany.currentPrice = computeDynamicSharePrice(
+        selectedCompany.startingPrice,
+        selectedCompany.workingCapital,
+        selectedCompany.totalInvestmentECN
+      );
+
+      const txId = "LOG-" + Date.now();
+      const timeStr = new Date().toLocaleTimeString();
+      transactions.push({
+        id: txId,
+        time: timeStr,
+        investorId: currentUser.userId,
+        compName: selectedCompany.compName,
+        ecnDeducted: amount,
+        multiplier: MULTIPLIER,
+        units: units
+      });
+
+      // Send to webhook
+      const webhookUrl = APPS_SCRIPT_WEBHOOK_URL + "?id=" + encodeURIComponent(txId) +
+        "&time=" + encodeURIComponent(timeStr) +
+        "&investor=" + encodeURIComponent(currentUser.userId) +
+        "&comp=" + encodeURIComponent(selectedCompany.compName) +
+        "&ecn=" + amount +
+        "&units=" + units +
+        "&_r=" + Math.random();
+
+      try { fetch(webhookUrl, { method: "GET", mode: "no-cors" }); } catch(e) {}
+      const beacon = new Image();
+      beacon.src = webhookUrl;
+
+      saveState();
+      renderMarketGrid();
+      renderLeaderboard();
+      renderPortfolioGrid();
+      renderLedger();
+      closeOrderModal();
+
+      alert("✅ TRADE CONFIRMED!\n\nTarget Company: " + selectedCompany.compName + "\nNew Share Price: ₹" + Number(selectedCompany.currentPrice).toFixed(2) + "\nUnits Issued: " + units.toLocaleString() + " (3.0x)\nRemaining Balance: " + currentUser.ecnBalance.toLocaleString() + " ECN");
+    }
+
+    function changeRankingCriteria(val) {
+      activeRankingCriterion = val;
+      renderMarketGrid();
+    }
+
+    function switchTab(tab) {
+      ['market', 'portfolio', 'leaderboard', 'ledger', 'desk-badges'].forEach(function(t) {
+        document.getElementById('tab-' + t).style.display = (t === tab) ? "flex" : "none";
+      });
+      document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+        const names = ['market', 'portfolio', 'leaderboard', 'ledger', 'desk-badges'];
+        b.className = (names[i] === tab) ? "tab-btn active" : "tab-btn";
+        if (names[i] === 'desk-badges' && names[i] !== tab) b.className += " highlight";
+      });
+      if (tab === 'ledger') renderLedger();
+      if (tab === 'desk-badges') renderDeskBadges();
+      if (tab === 'portfolio') renderPortfolioGrid();
+      if (tab === 'leaderboard') renderLeaderboard();
+      if (tab === 'market') renderMarketGrid();
+    }
+  </script>
+</body>
+</html>
